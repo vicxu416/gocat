@@ -39,5 +39,16 @@ func TestParseRequest(t *testing.T) {
 			assert.Equal(t, request.GetValStr(), testcase.val)
 		})
 	}
+}
 
+func TestRequestToBytes(t *testing.T) {
+	req := &Request{
+		Typ: SET,
+		key: []byte("test"),
+		val: []byte("test"),
+	}
+
+	byt := []byte{'S', '4', ' ', '4', ' '}
+	byt = append(byt, []byte("testtest")...)
+	assert.Equal(t, byt, req.ToBytes())
 }

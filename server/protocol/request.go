@@ -24,11 +24,49 @@ var cmdMap = map[byte]ReqType{
 	'D': DEL,
 }
 
+func NewTestRequest(typ ReqType, key, val []byte) *Request {
+	req := &Request{
+		Typ: typ,
+		key: key,
+		val: val,
+	}
+
+	return req
+}
+
 type Request struct {
 	Typ ReqType
 	key []byte
 	val []byte
 	ctx context.Context
+}
+
+func (req *Request) ToBytes() []byte {
+	byt := make([]byte, 0, 1)
+
+	for k, v := range cmdMap {
+		if v == req.Typ {
+			byt = append(byt, k)
+			break
+		}
+	}
+
+	key := req.GetKey()
+	val := req.GetVal()
+	keyLen := []byte(strconv.Itoa(len(key)))
+	valLen := []byte(strconv.Itoa(len(val)))
+
+	byt = append(byt, keyLen...)
+	byt = append(byt, ' ')
+	if req.Typ == SET {
+		byt = append(byt, valLen...)
+		byt = append(byt, ' ')
+	}
+	byt = append(byt, key...)
+	if req.Typ == SET {
+		byt = append(byt, val...)
+	}
+	return byt
 }
 
 func (cmd *Request) GetKey() []byte {
