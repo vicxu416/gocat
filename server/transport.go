@@ -11,10 +11,14 @@ import (
 )
 
 func newTransPool(s *Server) *sync.Pool {
+	newCtx, cancel := context.WithCancel(s.ctx)
 	return &sync.Pool{
 		New: func() interface{} {
 			return &Transport{
-				Server: s,
+				Server:     s,
+				ctx:        newCtx,
+				ctxCancel:  cancel,
+				responseCh: make(chan *protocol.Response, 1),
 			}
 		},
 	}
@@ -42,7 +46,7 @@ func (tran *Transport) Do() error {
 }
 
 func (tran *Transport) handleReq(req *protocol.Request) {
-	resp, err := tran.handler.HandleCmd(req)
+	resp, err := tran.handler.Handle(req)
 	if err != nil {
 		return
 	}
@@ -58,7 +62,7 @@ func (tran *Transport) response() {
 	for {
 		select {
 		case resp := <-tran.responseCh:
-			tran.conn.Write(resp.ToBytes())
+			tran.conn.Write(resp.Marshal())
 		case <-tran.ctx.Done():
 			return
 		}

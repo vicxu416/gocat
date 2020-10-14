@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"net"
 	"sync"
 
@@ -8,7 +9,7 @@ import (
 )
 
 type Handler interface {
-	HandleCmd(cmd *protocol.Request) (*protocol.Response, error)
+	Handle(req *protocol.Request) (*protocol.Response, error)
 }
 
 func New(addr, port string, handler Handler, options ...Option) *Server {
@@ -23,6 +24,7 @@ func New(addr, port string, handler Handler, options ...Option) *Server {
 		port:    port,
 		handler: handler,
 		Config:  config,
+		ctx:     context.Background(),
 	}
 	s.transPool = newTransPool(s)
 	return s
@@ -38,9 +40,10 @@ type Server struct {
 	port      string
 	handler   Handler
 	transPool *sync.Pool
+	ctx       context.Context
 }
 
-func (s *Server) Listen() error {
+func (s *Server) Run() error {
 	tcpAddr, err := net.ResolveTCPAddr("tcp", s.addr+":"+s.port)
 	if err != nil {
 		return err
@@ -57,6 +60,10 @@ func (s *Server) Listen() error {
 		}
 		go s.handleConn(conn)
 	}
+}
+
+func (s *Server) Shutdown() error {
+	return nil
 }
 
 func (s *Server) handleConn(conn net.Conn) {

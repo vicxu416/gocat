@@ -2,6 +2,7 @@ package util
 
 import (
 	"reflect"
+	"strconv"
 	"unsafe"
 )
 
@@ -16,4 +17,13 @@ func StringToBytes(s string) (b []byte) {
 // BytesToString converts byte slice to string without a memory allocation.
 func BytesToString(b []byte) string {
 	return *(*string)(unsafe.Pointer(&b))
+}
+
+func BytesToInt(b []byte) (int, error) {
+	s := BytesToString(b)
+	return strconv.Atoi(s)
+}
+
+func IntToBytes(num int) []byte {
+	return StringToBytes(strconv.Itoa(num))
 }
